@@ -1,6 +1,6 @@
-# All New SATRIA Project
+# SATRIA Project
 
-All New SATRIA is a web application with feature to control "Surat Jalan".
+SATRIA is a web application with feature to control "Surat Jalan".
 
 ## Contributing
 
