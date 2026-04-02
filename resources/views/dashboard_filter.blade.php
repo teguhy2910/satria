@@ -64,7 +64,9 @@
                 <td>{{$row->customer_name}}</td>
                 <td>{{$row->pdsnumber}}</td>
                 <td>{{$row->doaii}}</td>
-                <td>{{$row->sj_balik}}</td>
+                <td>
+                    {{ $row->sj_balik ? $row->sj_balik : ($row->updated_at ? \Carbon\Carbon::parse($row->updated_at)->format('Y-m-d H:i') : '') }}
+                </td>
                 <td>{{$row->terima_finance}}</td>
                 <td>{{ $row->updated_at ? \Carbon\Carbon::parse($row->updated_at)->format('Y-m-d H:i') : '' }}</td>
                 </tr>

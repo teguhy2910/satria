@@ -51,7 +51,11 @@ class MainController extends Controller
                 return $row->tanggal_delivery ? Carbon::parse($row->tanggal_delivery)->format('Y-m-d') : '';
             })
             ->editColumn('sj_balik', function($row) {
-                return $row->sj_balik;
+                if (!empty($row->sj_balik)) {
+                    return $row->sj_balik;
+                }
+
+                return $row->updated_at ? Carbon::parse($row->updated_at)->format('Y-m-d H:i') : '';
             })
             ->editColumn('terima_finance', function($row) {
                 return $row->terima_finance;
@@ -73,6 +77,13 @@ class MainController extends Controller
             return Datatables::of($data)
             ->editColumn('tanggal_delivery', function($row) {
                 return $row->tanggal_delivery ? Carbon::parse($row->tanggal_delivery)->format('Y-m-d') : '';
+            })
+            ->editColumn('sj_balik', function($row) {
+                if (!empty($row->sj_balik)) {
+                    return $row->sj_balik;
+                }
+
+                return $row->updated_at ? Carbon::parse($row->updated_at)->format('Y-m-d H:i') : '';
             })
             ->addColumn('action', function ($data) {
                     return '<a class="btn btn-warning btn-xs" href="edit_sj/'.$data->id.'">Edit</a>
