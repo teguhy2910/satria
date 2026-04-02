@@ -85,6 +85,9 @@ window.Laravel = <?php echo json_encode([
 <li><a href="{{asset('sj_error')}}"><font color="white" face="calibri" size="3px"> 
 <button class="btn2">SJ Error</button></font></a>
 </li>
+<li><a href="{{asset('customer')}}"><font color="white" face="calibri" size="3px"> 
+<button class="btn2">Customer</button></font></a>
+</li>
 @endif
 @if(Auth::user()->name == 'ppic1' || Auth::user()->name == 'ppic2' || Auth::user()->name == 'ppic3')
 <li><a href="{{asset('dashboard')}}"><font color="white" face="calibri" size="3px"> ALL SJ/DO</font></a></li>
@@ -139,6 +142,7 @@ document.getElementById('logout-form').submit();">
 <script type="text/javascript" src="{{asset('js/responsive.bootstrap.min.js')}}"></script>
 <script type="text/javascript" src="{{asset('js/buttons.colVis.min.js')}}"></script>
 <script type="text/javascript" src="{{asset('js/Chart.bundle.min.js')}}"></script>
+@stack('scripts')
 <script type="text/javascript" src="{{asset('js/sweetalert.min.js')}}"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
 <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/>
@@ -280,6 +284,7 @@ ajax: {
 });
 </script>
 
+@yield('page-scripts')
 
 </body>
 </html>

@@ -43,10 +43,10 @@ class MainController extends Controller
         $data = sj::select('sjs.id','sjs.created_at','sjs.tanggal_delivery','sjs.customer_code','customers.customer_name','sjs.pdsnumber','sjs.doaii','sjs.sj_balik','sjs.terima_finance','sj_errors.updated_at')
         ->leftjoin('customers','customers.customer_code','sjs.customer_code')
         ->leftJoin('sj_errors','sj_errors.doaii','sjs.doaii')
-	->groupBy('sjs.doaii');       
-        $applyBlankFilter($data, 'sjs.sj_balik', $sjBalikKeyword);
-        $applyBlankFilter($data, 'sjs.terima_finance', $financeKeyword); 
-        return Datatables::of($data)
+            ->groupBy('sjs.doaii');
+            $applyBlankFilter($data, 'sjs.sj_balik', $sjBalikKeyword);
+            $applyBlankFilter($data, 'sjs.terima_finance', $financeKeyword);
+            return Datatables::of($data)
             ->editColumn('tanggal_delivery', function($row) {
                 return $row->tanggal_delivery ? Carbon::parse($row->tanggal_delivery)->format('Y-m-d') : '';
             })
@@ -56,31 +56,31 @@ class MainController extends Controller
             ->editColumn('terima_finance', function($row) {
                 return $row->terima_finance;
             })
-        ->addColumn('action', function ($data) {
-                return '<a class="btn btn-warning btn-xs" href="edit_sj/'.$data->id.'">Edit</a>
-                <a class="btn btn-danger btn-xs" href="delete_sj/'.$data->id.'">Del</a>
-                ';
-            })
-        ->make();
-    }else{
+            ->addColumn('action', function ($data) {
+                    return '<a class="btn btn-warning btn-xs" href="edit_sj/'.$data->id.'">Edit</a>
+                    <a class="btn btn-danger btn-xs" href="delete_sj/'.$data->id.'">Del</a>
+                    ';
+                })
+            ->make();
+        }else{
         $data = sj::select('sjs.id','sjs.created_at','sjs.tanggal_delivery','sjs.customer_code','customers.customer_name','sjs.pdsnumber','sjs.doaii','sjs.sj_balik','sjs.terima_finance','sj_errors.updated_at')
         ->leftjoin('customers','customers.customer_code','sjs.customer_code')
         ->leftJoin('sj_errors','sj_errors.doaii','sjs.doaii')
 	->where('sjs.doaii','like','%SJ/%')
 	->groupBy('sjs.doaii');       
-        $applyBlankFilter($data, 'sjs.sj_balik', $sjBalikKeyword);
-        $applyBlankFilter($data, 'sjs.terima_finance', $financeKeyword); 
-        return Datatables::of($data)
-        ->editColumn('tanggal_delivery', function($row) {
+            $applyBlankFilter($data, 'sjs.sj_balik', $sjBalikKeyword);
+            $applyBlankFilter($data, 'sjs.terima_finance', $financeKeyword);
+            return Datatables::of($data)
+            ->editColumn('tanggal_delivery', function($row) {
                 return $row->tanggal_delivery ? Carbon::parse($row->tanggal_delivery)->format('Y-m-d') : '';
             })
-        ->addColumn('action', function ($data) {
-                return '<a class="btn btn-warning btn-xs" href="edit_sj/'.$data->id.'">Edit</a>
-                ';
-            })
-        ->make();
+            ->addColumn('action', function ($data) {
+                    return '<a class="btn btn-warning btn-xs" href="edit_sj/'.$data->id.'">Edit</a>
+                    ';
+                })
+            ->make();
+        }
     }
-}
     public function data_outstanding_sj()
     {
         $start_date=Carbon::now()->addDays(-7);                
@@ -122,8 +122,16 @@ class MainController extends Controller
     }
     public function sj_error()
     {
-        $data=sj_error::all();
-        return view('sj_error',compact('data'));
+        return view('sj_error');
+    }
+    public function data_sj_error()
+    {
+        $data = sj_error::select('id', 'doaii', 'user_scan', 'created_at');
+        return Datatables::of($data)
+            ->editColumn('created_at', function($row) {
+                return $row->created_at ? \Carbon\Carbon::parse($row->created_at)->format('d/m/Y H:i:s') : '';
+            })
+            ->make();
     }
           
     public function dashboard()
@@ -144,8 +152,11 @@ class MainController extends Controller
         $fromDate = Carbon::createFromFormat('Y-m-d', $from)->startOfDay();
         $toDate = Carbon::createFromFormat('Y-m-d', $to)->endOfDay();
         
-        $data = sj::whereBetween('tanggal_delivery', [$fromDate, $toDate])
-                  ->groupBy('doaii')
+        $data = sj::select('sjs.id','sjs.created_at','sjs.tanggal_delivery','sjs.customer_code','customers.customer_name','sjs.pdsnumber','sjs.doaii','sjs.sj_balik','sjs.terima_finance','sj_errors.updated_at')
+                  ->leftjoin('customers','customers.customer_code','sjs.customer_code')
+                  ->leftJoin('sj_errors','sj_errors.doaii','sjs.doaii')
+                  ->whereBetween('sjs.tanggal_delivery', [$fromDate, $toDate])
+                  ->groupBy('sjs.doaii')
                   ->get();
         
         return view('dashboard_filter', compact('data'));
@@ -200,8 +211,9 @@ class MainController extends Controller
         Session::flash('danger', 'Something Wrong Contact Administrator'); 
         return redirect('/sj/dashboard');
     }
-    public function customer_store()
-    {        
+    public function customer_store(Request $request)
+    {
+        // If file is uploaded, process Excel import
         if(Input::hasFile('customer')){
             $path = Input::file('customer')->getRealPath();
             $data = Excel::load($path)->get();
@@ -214,18 +226,114 @@ class MainController extends Controller
                     ];
                     }
                 }               
-                foreach($insert as $row) {                    
-                    customer::create($row);                    
-                    }                   
+                if(!empty($insert)){
+                    foreach($insert as $row) {                    
+                        customer::create($row);                    
+                    }
+                    Session::flash('message', 'Sukses Upload Customer, Total=' . count($insert));
                 }else{
-                    Session::flash('danger', 'Gagal Upload SJ');
-                }                            
-        Session::flash('danger', 'Something Wrong Contact Administrator'); 
+                    Session::flash('danger', 'Gagal Upload, File kosong atau format salah');
+                }
+        }
+        // If direct form submission from modal
+        elseif($request->has('customer_code') && $request->has('customer_name')){
+            $this->validate($request, [
+                'customer_code' => 'required|string',
+                'customer_name' => 'required|string',
+            ]);
+            
+            customer::create([
+                'customer_code' => $request->input('customer_code'),
+                'customer_name' => $request->input('customer_name'),
+            ]);
+            
+            return response()->json(['success' => true, 'message' => 'Customer berhasil ditambahkan']);
+        }else{
+            Session::flash('danger', 'Something Wrong Contact Administrator');
+        }
+        
         return redirect('/customer');
+    }
+    public function data_customer()
+    {
+        $data = customer::select('id', 'customer_code', 'customer_name', 'created_at');
+        return Datatables::of($data)
+            ->editColumn('created_at', function($row) {
+                return $row->created_at ? \Carbon\Carbon::parse($row->created_at)->format('d/m/Y H:i') : '';
+            })
+            ->addColumn('action', function ($row) {
+                return '<a class="btn btn-warning btn-xs" href="edit_customer/'.$row->id.'">Edit</a>
+                <a class="btn btn-danger btn-xs" href="delete_customer/'.$row->id.'">Delete</a>
+                ';
+            })
+            ->rawColumns(['action'])
+            ->make();
     }
     public function customer()
     {
-        return view('customer');
+        $data = customer::all();
+        return view('customer', compact('data'));
+    }
+    public function customer_create()
+    {
+        return view('customer_create');
+    }
+    public function customer_store_form(Request $request)
+    {
+        $this->validate($request, [
+            'customer_code' => 'required|string',
+            'customer_name' => 'required|string',
+        ]);
+        
+        customer::create([
+            'customer_code' => $request->input('customer_code'),
+            'customer_name' => $request->input('customer_name'),
+        ]);
+        
+        Session::flash('message', 'Customer berhasil ditambahkan');
+        return redirect('/customer');
+    }
+    public function customer_edit($id)
+    {
+        $data = customer::find($id);
+        if (!$data) {
+            Session::flash('danger', 'Customer tidak ditemukan');
+            return redirect('/customer');
+        }
+        return view('customer_edit', compact('data'));
+    }
+    public function customer_update(Request $request, $id)
+    {
+        $customer = customer::find($id);
+        if (!$customer) {
+            Session::flash('danger', 'Customer tidak ditemukan');
+            return redirect('/customer');
+        }
+        
+        $this->validate($request, [
+            'customer_code' => 'required|string',
+            'customer_name' => 'required|string',
+        ]);
+        
+        $customer->update([
+            'customer_code' => $request->input('customer_code'),
+            'customer_name' => $request->input('customer_name'),
+        ]);
+        
+        Session::flash('message', 'Customer berhasil diupdate');
+        return redirect('/customer');
+    }
+    public function customer_delete($id)
+    {
+        $customer = customer::find($id);
+        if (!$customer) {
+            Session::flash('danger', 'Customer tidak ditemukan');
+            return redirect('/customer');
+        }
+        
+        $customer->delete();
+        Session::flash('message', 'Customer berhasil dihapus');
+        return redirect('/customer');
     }
     public function update_sj_balik_ppic_upload()
     {

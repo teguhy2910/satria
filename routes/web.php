@@ -29,8 +29,13 @@ Route::post('/create/sj','MainController@create_sj_store');
 Route::get('/download_sj','MainController@download_sj');
 
 
-Route::post('/customer','MainController@customer_store');
-Route::get('/customer','MainController@customer');
+Route::post('/customer','MainController@customer_store')->name('customer.store');
+Route::get('/customer','MainController@customer')->name('customer.index');
+Route::get('/customer/create','MainController@customer_create')->name('customer.create');
+Route::post('/customer/store-form','MainController@customer_store_form')->name('customer.store.form');
+Route::get('/edit_customer/{id}','MainController@customer_edit')->name('customer.edit');
+Route::post('/edit_customer/{id}','MainController@customer_update')->name('customer.update');
+Route::get('/delete_customer/{id}','MainController@customer_delete')->name('customer.delete');
 
 Route::post('/invoice','MainController@update_invoice_upload');
 Route::get('/invoice','MainController@invoice');
@@ -38,3 +43,4 @@ Route::get('/invoicing','MainController@invoicing');
 Route::post('/data_invoice','MainController@data_invoice');
 
 Route::get('/sj_error','MainController@sj_error');
+Route::post('/data_sj_error','MainController@data_sj_error');
